@@ -1,0 +1,108 @@
+<svg width="680" height="760" viewBox="0 0 680 760" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>LegalAssistant RAG pipeline architecture</title>
+<desc>Flowchart showing data collection through cleaning, chunking, embedding, and indexing into a vector store; then at query time, user question flows through history-aware retrieval, vector search, LLM generation with retrieved context, caching, and finally the chat UI.</desc>
+
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#555555" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<rect x="0" y="0" width="680" height="760" fill="#FFFFFF"/>
+
+<text x="340" y="26" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666666">Offline: knowledge base build</text>
+
+<!-- Data collection -->
+<g>
+  <rect x="90" y="42" width="150" height="56" rx="8" fill="#FAECE7" stroke="#D85A30" stroke-width="1"/>
+  <text x="165" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#4A1B0C">Data collection</text>
+  <text x="165" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#712B13">Bare-act text (India Code)</text>
+</g>
+
+<!-- Cleaning + chunking -->
+<g>
+  <rect x="265" y="42" width="150" height="56" rx="8" fill="#FAECE7" stroke="#D85A30" stroke-width="1"/>
+  <text x="340" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#4A1B0C">Cleaning + chunking</text>
+  <text x="340" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#712B13">Section-level splits</text>
+</g>
+
+<!-- Embed + index -->
+<g>
+  <rect x="440" y="42" width="150" height="56" rx="8" fill="#FAECE7" stroke="#D85A30" stroke-width="1"/>
+  <text x="515" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#4A1B0C">Embed + index</text>
+  <text x="515" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#712B13">Vectors into ChromaDB</text>
+</g>
+
+<line x1="240" y1="70" x2="263" y2="70" stroke="#555555" stroke-width="1" marker-end="url(#arrow)"/>
+<line x1="415" y1="70" x2="438" y2="70" stroke="#555555" stroke-width="1" marker-end="url(#arrow)"/>
+
+<line x1="515" y1="98" x2="515" y2="146" stroke="#555555" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- Vector store -->
+<g>
+  <rect x="440" y="148" width="150" height="48" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
+  <text x="515" y="176" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#2C2C2A">Vector store</text>
+</g>
+
+<line x1="440" y1="172" x2="120" y2="172" stroke="#555555" stroke-width="1" marker-end="url(#arrow)"/>
+<line x1="120" y1="172" x2="120" y2="428" stroke="#555555" stroke-width="1"/>
+<text x="280" y="192" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666666">queried at runtime</text>
+
+<line x1="340" y1="212" x2="340" y2="228" stroke="#CCCCCC" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="340" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666666">Online: per query</text>
+
+<!-- User question -->
+<g>
+  <rect x="265" y="248" width="150" height="48" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
+  <text x="340" y="276" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#2C2C2A">User question</text>
+</g>
+
+<line x1="340" y1="296" x2="340" y2="320" stroke="#555555" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- Query contextualization -->
+<g>
+  <rect x="215" y="322" width="250" height="56" rx="8" fill="#E6F1FB" stroke="#378ADD" stroke-width="1"/>
+  <text x="340" y="342" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#042C53">Query contextualization</text>
+  <text x="340" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#0C447C">LLM rewrites using chat history</text>
+</g>
+
+<line x1="340" y1="378" x2="340" y2="402" stroke="#555555" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- Retrieval -->
+<g>
+  <rect x="215" y="404" width="250" height="56" rx="8" fill="#E6F1FB" stroke="#378ADD" stroke-width="1"/>
+  <text x="340" y="424" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#042C53">Retrieval</text>
+  <text x="340" y="442" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#0C447C">Similarity search, top-k + threshold</text>
+</g>
+
+<line x1="120" y1="428" x2="213" y2="428" stroke="#555555" stroke-width="1" marker-end="url(#arrow)"/>
+
+<line x1="340" y1="460" x2="340" y2="484" stroke="#555555" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- LLM generation -->
+<g>
+  <rect x="215" y="486" width="250" height="56" rx="8" fill="#E6F1FB" stroke="#378ADD" stroke-width="1"/>
+  <text x="340" y="506" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#042C53">LLM generation</text>
+  <text x="340" y="524" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#0C447C">Context + prompt + history</text>
+</g>
+
+<line x1="340" y1="542" x2="340" y2="566" stroke="#555555" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- Cache + session update -->
+<g>
+  <rect x="215" y="568" width="250" height="56" rx="8" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1"/>
+  <text x="340" y="588" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#04342C">Cache + session update</text>
+  <text x="340" y="606" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#085041">Redis stores answer + history</text>
+</g>
+
+<line x1="340" y1="624" x2="340" y2="648" stroke="#555555" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- Chat UI -->
+<g>
+  <rect x="215" y="650" width="250" height="48" rx="8" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1"/>
+  <text x="340" y="678" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#04342C">Chat UI</text>
+</g>
+
+<text x="340" y="726" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666666">↻ next user message re-enters at query contextualization</text>
+
+</svg>
