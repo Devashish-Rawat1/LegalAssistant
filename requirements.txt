@@ -1,0 +1,10 @@
+langchain
+langchain-openai
+langchain-chroma
+langchain-text-splitters
+chromadb
+openai
+streamlit
+redis
+python-dotenv
+pdfplumber
