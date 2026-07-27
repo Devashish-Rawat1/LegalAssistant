@@ -1,0 +1,19 @@
+# Environment / secrets
+.env
+
+# Vector store (regenerate via ingest.py, don't commit)
+chroma_db_legal/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
