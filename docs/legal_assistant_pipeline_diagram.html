@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LegalAssistant — Data Pipeline</title>
+<style>
+  :root {
+    --ink: #1c2b23;
+    --ink-soft: #4a5a51;
+    --paper: #f6f3ea;
+    --paper-raised: #ffffff;
+    --rule: #d8d2c0;
+    --accent: #6b3a2e;
+    --accent-soft: #f0e2dd;
+    --stage1: #8a6d3b;
+    --stage2: #3b6d5a;
+    --stage3: #2f5f7a;
+    --stage4: #6b4a8a;
+    --stage5: #6b3a2e;
+    --mono: "IBM Plex Mono", "Courier New", monospace;
+    --serif: "Source Serif Pro", Georgia, serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 64px 32px 96px;
+  }
+
+  header.masthead {
+    border-bottom: 3px double var(--ink);
+    padding-bottom: 20px;
+    margin-bottom: 48px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-size: 40px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .subtitle code {
+    background: var(--accent-soft);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 24px;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+
+  .stage:last-child { border-bottom: none; }
+
+  .stage-number {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink-soft);
+    padding-top: 4px;
+  }
+
+  .stage-number .n {
+    display: block;
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--stage-color);
+    line-height: 1;
+    margin-bottom: 4px;
+    font-family: var(--serif);
+  }
+
+  .stage-body h2 {
+    font-size: 20px;
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+
+  .stage-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    padding: 2px 8px;
+    margin-bottom: 10px;
+  }
+
+  .stage[data-stage="1"] .stage-tag { color: var(--stage1); background: #f4ede1; border: 1px solid #cdb98a; }
+  .stage[data-stage="2"] .stage-tag { color: var(--stage2); background: #e6efe9; border: 1px solid #9dc2af; }
+  .stage[data-stage="3"] .stage-tag { color: var(--stage3); background: #e5edf1; border: 1px solid #93b9cb; }
+  .stage[data-stage="4"] .stage-tag { color: var(--stage4); background: #ede6f1; border: 1px solid #b39ac9; }
+  .stage[data-stage="5"] .stage-tag { color: var(--stage5); background: var(--accent-soft); border: 1px solid #c9a89e; }
+
+  .stage-desc {
+    font-size: 15.5px;
+    color: var(--ink);
+    max-width: 58ch;
+    margin: 0 0 14px;
+  }
+
+  .io-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .io-chip {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 4px 10px;
+    color: var(--ink-soft);
+  }
+
+  .io-chip.file {
+    color: var(--stage-color);
+  }
+
+  .stage[data-stage="1"] .io-chip.file { border-color: #cdb98a; }
+  .stage[data-stage="2"] .io-chip.file { border-color: #9dc2af; }
+  .stage[data-stage="3"] .io-chip.file { border-color: #93b9cb; }
+  .stage[data-stage="4"] .io-chip.file { border-color: #b39ac9; }
+  .stage[data-stage="5"] .io-chip.file { border-color: #c9a89e; }
+
+  .io-arrow {
+    color: var(--rule);
+    font-size: 14px;
+  }
+
+  .stage[data-stage="1"] { --stage-color: var(--stage1); }
+  .stage[data-stage="2"] { --stage-color: var(--stage2); }
+  .stage[data-stage="3"] { --stage-color: var(--stage3); }
+  .stage[data-stage="4"] { --stage-color: var(--stage4); }
+  .stage[data-stage="5"] { --stage-color: var(--stage5); }
+
+  .connector {
+    width: 1px;
+    height: 20px;
+    background: var(--rule);
+    margin-left: 35px;
+  }
+
+  .example-block {
+    margin-top: 14px;
+    background: #fbfaf5;
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--stage-color);
+    border-radius: 0 4px 4px 0;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+
+  .example-block .label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--stage-color);
+    margin-bottom: 6px;
+  }
+
+  .final-artifact {
+    margin-top: 56px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 8px;
+    padding: 32px;
+  }
+
+  .final-artifact .eyebrow2 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #d4b8ac;
+    margin-bottom: 10px;
+  }
+
+  .final-artifact h2 {
+    font-size: 24px;
+    margin: 0 0 12px;
+    font-family: var(--mono);
+    font-weight: 500;
+  }
+
+  .final-artifact p {
+    font-size: 14.5px;
+    color: #cfd6d0;
+    max-width: 62ch;
+    margin: 0 0 16px;
+  }
+
+  .final-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .final-grid div {
+    border: 1px solid #3a453e;
+    border-radius: 4px;
+    padding: 8px 12px;
+    color: #b9c2bc;
+  }
+
+  .footnote {
+    margin-top: 40px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--rule);
+    padding-top: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .page { padding: 40px 20px 64px; }
+    h1 { font-size: 28px; }
+    .stage { grid-template-columns: 1fr; }
+    .stage-number { display: flex; align-items: baseline; gap: 10px; padding-top: 0; }
+    .stage-number .n { margin-bottom: 0; }
+    .final-grid { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    body { background: white; }
+    .final-artifact { background: white; color: black; border: 2px solid black; }
+    .final-artifact p, .final-artifact .eyebrow2 { color: #333; }
+    .final-grid div { color: #333; border-color: #999; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div class="eyebrow">LegalAssistant &nbsp;·&nbsp; build_knowledge_base.py</div>
+    <h1>From bare acts to a queryable knowledge base</h1>
+    <div class="subtitle">Five stages, one script. Ends at <code>chroma_db_legal_bot_part1/</code></div>
+  </header>
+
+  <div class="pipeline">
+
+    <div class="stage" data-stage="1">
+      <div class="stage-number"><span class="n">01</span>five stages</div>
+      <div class="stage-body">
+        <span class="stage-tag">Raw statute text</span>
+        <p class="stage-desc">
+          Bare-act PDFs — the Constitution, BNS, BNSS, BSA, Consumer Protection Act,
+          and others — are sourced from an official repository like India Code, then
+          read page by page to pull out their raw text.
+        </p>
+        <div class="io-row">
+          <span class="io-chip file">data/raw_pdfs/*.pdf</span>
+          <span class="io-arrow">&rarr;</span>
+          <span class="io-chip">pdfplumber.extract_text()</span>
+          <span class="io-arrow">&rarr;</span>
+          <span class="io-chip file">raw text (in memory)</span>
+        </div>
+        <div class="example-block">
+<span class="label">Typical raw output</span>THE GAZETTE OF INDIA
+EXTRAORDINARY
+Section 1. Short title and commencement.
+This Act may be called the Test Act, 2024. It shall
+come into force on such date as the Central
+Government may notify.
+1</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <div class="stage" data-stage="2">
+      <div class="stage-number"><span class="n">02</span></div>
+      <div class="stage-body">
+        <span class="stage-tag">Cleaning</span>
+        <p class="stage-desc">
+          The raw text is normalized: repeated headers like "THE GAZETTE OF INDIA",
+          stray page numbers, and broken line-wraps from the PDF layout are removed
+          or rejoined, so each section reads as one continuous, well-formed passage.
+        </p>
+        <div class="io-row">
+          <span class="io-chip">strip page numbers &amp; headers</span>
+          <span class="io-arrow">&rarr;</span>
+          <span class="io-chip">rejoin wrapped lines</span>
+        </div>
+        <div class="example-block">
+<span class="label">After cleaning</span>Section 1. Short title and commencement.
+This Act may be called the Test Act, 2024. It shall come into force on such date as the Central Government may notify.</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <div class="stage" data-stage="3">
+      <div class="stage-number"><span class="n">03</span></div>
+      <div class="stage-body">
+        <span class="stage-tag">Chunking</span>
+        <p class="stage-desc">
+          Cleaned text is split on real <code style="font-family:var(--mono)">Section N</code>
+          / <code style="font-family:var(--mono)">Article N</code> boundaries — not arbitrary
+          character counts — so each chunk is one legally coherent unit. Every chunk
+          keeps its source act and section number as metadata.
+        </p>
+        <div class="io-row">
+          <span class="io-chip">regex: Section/Article boundaries</span>
+          <span class="io-arrow">&rarr;</span>
+          <span class="io-chip file">chunk + {source, section}</span>
+        </div>
+        <div class="example-block">
+<span class="label">One chunk, tagged</span>{
+  "text": "Section 3. Punishment for theft. Whoever commits theft shall be punished with imprisonment...",
+  "metadata": { "source": "bns_2023", "section": "Section 3" }
+}</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <div class="stage" data-stage="4">
+      <div class="stage-number"><span class="n">04</span></div>
+      <div class="stage-body">
+        <span class="stage-tag">Embedding</span>
+        <p class="stage-desc">
+          Each chunk's text is passed through OpenAI's embedding model, which converts
+          it into a vector — a list of numbers capturing its meaning, so that
+          "theft" and "stealing" land close together even though they're different words.
+        </p>
+        <div class="io-row">
+          <span class="io-chip file">chunk text</span>
+          <span class="io-arrow">&rarr;</span>
+          <span class="io-chip">OpenAIEmbeddings()</span>
+          <span class="io-arrow">&rarr;</span>
+          <span class="io-chip file">[0.014, -0.22, 0.19, ...]</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <div class="stage" data-stage="5">
+      <div class="stage-number"><span class="n">05</span></div>
+      <div class="stage-body">
+        <span class="stage-tag">Persisting to disk</span>
+        <p class="stage-desc">
+          Every vector, alongside its original chunk text and metadata, is written to
+          a persistent Chroma vector store. This single folder becomes the finished,
+          queryable knowledge base the whole application runs on.
+        </p>
+        <div class="io-row">
+          <span class="io-chip">Chroma.from_documents(persist_directory=...)</span>
+          <span class="io-arrow">&rarr;</span>
+          <span class="io-chip file">chroma_db_legal_bot_part1/</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="final-artifact">
+    <div class="eyebrow2">The finished artifact</div>
+    <h2>chroma_db_legal_bot_part1/</h2>
+    <p>
+      A SQLite database plus a vector index (HNSW), on disk. Every legal question
+      the app receives is matched against this store first — this is the entire
+      knowledge base the assistant can draw on, and nothing else.
+    </p>
+    <div class="final-grid">
+      <div>chroma.sqlite3 — text + metadata</div>
+      <div>data_level0.bin — vector index</div>
+      <div>header.bin — index config</div>
+      <div>link_lists.bin — HNSW graph links</div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    build_knowledge_base.py &nbsp;·&nbsp; run once per data update, not per query
+  </div>
+
+</div>
+</body>
+</html>
