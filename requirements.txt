@@ -1,16 +1,9 @@
-langchain
-langchain-openai
-langchain-chroma
-langchain-text-splitters
-chromadb
-openai
-streamlit
-redis
-python-dotenv
 pdfplumber
-
-# pip install pdfplumber langchain langchain-openai langchain-chroma python-dotenv
-# mkdir -p data/raw_pdfs
-# # put your India Code PDFs in data/raw_pdfs/
-# echo "OPENAI_API_KEY=your-key-here" > .env
-# python build_knowledge_base.py
+langchain
+langchain-classic
+langchain-groq
+langchain-huggingface
+langchain-chroma
+langchain-core
+sentence-transformers
+python-dotenv
