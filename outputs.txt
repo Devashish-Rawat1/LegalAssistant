@@ -1,0 +1,98 @@
+------------------------------------ Outputs of each crucial files ----------------------------------
+
+ python build_knowledge_base.py
+2026-08-18 08:16:42,339 INFO Processing: Bharatiya_Nagarik_Suraksha_Sanhita,_2023
+2026-08-18 08:17:03,064 INFO   Stage 1 (extract): 862179 chars
+2026-08-18 08:17:03,140 INFO   Stage 2 (clean):   862179 chars -> 861142 chars
+2026-08-18 08:17:03,155 INFO Bharatiya_Nagarik_Suraksha_Sanhita,_2023: split into 1460 section-aligned chunks
+2026-08-18 08:17:03,155 INFO   Stage 3 (chunk):   1460 chunks
+2026-08-18 08:17:03,155 INFO Processing: constitution
+2026-08-18 08:17:35,757 INFO   Stage 1 (extract): 854494 chars
+2026-08-18 08:17:35,834 INFO   Stage 2 (clean):   854494 chars -> 841716 chars
+2026-08-18 08:17:35,836 INFO constitution: split into 2585 section-aligned chunks
+2026-08-18 08:17:35,836 INFO   Stage 3 (chunk):   2585 chunks
+2026-08-18 08:17:35,851 INFO Processing: the bharatiya nyaya sanhita 2023 pdf
+2026-08-18 08:17:51,010 INFO   Stage 1 (extract): 408296 chars
+2026-08-18 08:17:51,045 INFO   Stage 2 (clean):   408296 chars -> 367732 chars
+2026-08-18 08:17:51,049 INFO the bharatiya nyaya sanhita 2023 pdf: split into 432 section-aligned chunks
+2026-08-18 08:17:51,049 INFO   Stage 3 (chunk):   432 chunks
+2026-08-18 08:17:51,049 INFO Processing: The Bharatiya Sakshya Adhiniyam, 2023
+2026-08-18 08:17:58,191 INFO   Stage 1 (extract): 170394 chars
+2026-08-18 08:17:58,207 INFO   Stage 2 (clean):   170394 chars -> 152386 chars
+2026-08-18 08:17:58,207 INFO The Bharatiya Sakshya Adhiniyam, 2023: split into 190 section-aligned chunks
+2026-08-18 08:17:58,207 INFO   Stage 3 (chunk):   190 chunks
+2026-08-18 08:17:58,207 INFO Processing: The Consumer Protection Act, 2019
+2026-08-18 08:18:01,382 INFO   Stage 1 (extract): 127781 chars
+2026-08-18 08:18:01,397 INFO   Stage 2 (clean):   127781 chars -> 125934 chars
+2026-08-18 08:18:01,409 INFO The Consumer Protection Act, 2019: split into 152 section-aligned chunks
+2026-08-18 08:18:01,409 INFO   Stage 3 (chunk):   152 chunks
+2026-08-18 08:18:01,409 INFO Processing: The Information Technology Act, 2000
+2026-08-18 08:18:05,411 INFO   Stage 1 (extract): 123849 chars
+2026-08-18 08:18:05,411 INFO   Stage 2 (clean):   123849 chars -> 123718 chars
+2026-08-18 08:18:05,411 INFO The Information Technology Act, 2000: split into 367 section-aligned chunks
+2026-08-18 08:18:05,411 INFO   Stage 3 (chunk):   367 chunks
+2026-08-18 08:18:05,411 INFO Processing: The Motor Vehicles Act, 1988
+2026-08-18 08:18:16,186 INFO   Stage 1 (extract): 367724 chars
+2026-08-18 08:18:16,202 INFO   Stage 2 (clean):   367724 chars -> 367362 chars
+2026-08-18 08:18:16,218 INFO The Motor Vehicles Act, 1988: split into 724 section-aligned chunks
+2026-08-18 08:18:16,218 INFO   Stage 3 (chunk):   724 chunks
+2026-08-18 08:18:16,218 INFO Processing: The Sexual Harassment of Women at Workplace Act, 2013
+2026-08-18 08:18:17,441 INFO   Stage 1 (extract): 38836 chars
+2026-08-18 08:18:17,441 INFO   Stage 2 (clean):   38836 chars -> 38768 chars
+2026-08-18 08:18:17,441 INFO The Sexual Harassment of Women at Workplace Act, 2013: split into 81 section-aligned chunks
+2026-08-18 08:18:17,441 INFO   Stage 3 (chunk):   81 chunks
+2026-08-18 08:18:17,441 INFO Total chunks across all acts: 5991
+2026-08-18 08:18:17,441 INFO Loading local embedding model 'sentence-transformers/all-MiniLM-L6-v2' (first run downloads ~80MB, cached afterward — no API key needed).
+2026-08-18 08:18:20,170 INFO No device provided, using cpu
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-18 08:18:20,887 WARNING Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-18 08:18:21,284 INFO Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+Loading weights: 100%|████████████████████████████████████████████| 103/103 [00:00<00:00, 6541.69it/s]
+2026-08-18 08:18:27,317 INFO Embedding 5991 chunks and writing to 'chroma_db_legal_bot_part1'. This runs on your CPU — no API cost, but may take a few minutes for a large corpus.
+2026-08-18 08:19:40,155 INFO Done. 'chroma_db_legal_bot_part1' now contains the full embedded, searchable knowledge base.
+(legalassistant)
+
+
+ python vector_store.py
+2026-08-18 08:20:32,361 INFO No device provided, using cpu
+2026-08-18 08:20:33,062 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-18 08:20:33,062 WARNING Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-18 08:20:33,221 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json "HTTP/1.1 200 OK"
+2026-08-18 08:20:33,539 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-18 08:20:33,683 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json "HTTP/1.1 200 OK"
+2026-08-18 08:20:33,695 INFO Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-08-18 08:20:34,023 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-18 08:20:34,177 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json "HTTP/1.1 200 OK"
+2026-08-18 08:20:34,478 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-08-18 08:20:34,574 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md "HTTP/1.1 200 OK"
+2026-08-18 08:20:34,875 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-18 08:20:34,987 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json "HTTP/1.1 200 OK"
+2026-08-18 08:20:35,289 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-18 08:20:35,385 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/sentence_bert_config.json "HTTP/1.1 200 OK"
+2026-08-18 08:20:35,687 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+2026-08-18 08:20:35,973 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-18 08:20:36,053 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json "HTTP/1.1 200 OK"
+Loading weights: 100%|███████████████████████████████████████████| 103/103 [00:00<00:00, 15904.48it/s]
+2026-08-18 08:20:36,562 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-08-18 08:20:36,880 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-08-18 08:20:37,230 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-08-18 08:20:37,550 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-08-18 08:20:37,869 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-18 08:20:37,964 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-18 08:20:38,253 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-18 08:20:38,333 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json "HTTP/1.1 200 OK"
+2026-08-18 08:20:38,659 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-18 08:20:38,755 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json "HTTP/1.1 200 OK"
+2026-08-18 08:20:39,032 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-18 08:20:39,129 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-18 08:20:39,469 INFO HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-08-18 08:20:39,764 INFO HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-08-18 08:20:40,268 INFO HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-18 08:20:40,363 INFO HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+2026-08-18 08:20:40,742 INFO HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
+2026-08-18 08:20:40,849 INFO Loaded vector store 'chroma_db_legal_bot_part1' with 5991 indexed chunks
+Vector store ready. Document count: 5991
+(legalassistant)
+
+
