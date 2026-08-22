@@ -5,23 +5,25 @@ Full data pipeline, in one file, five stages:
 
   1. Raw statute text     - extract text from bare-act PDFs
   2. Cleaning             - strip page numbers, headers, rejoin broken lines
-  3. Chunking             - split on Section/Article boundaries
-  4. Embedding            - convert each chunk to a vector (OpenAI)
+  3. Chunking             - split on section-number boundaries
+  4. Embedding            - convert each chunk to a vector (LOCAL model, no API key)
   5. chroma_db_legal_bot_part1/ - persist vectors + text + metadata to disk
+
+Embeddings run locally via sentence-transformers (HuggingFace), not
+OpenAI or Groq — Groq doesn't offer an embeddings API, so this project
+uses a local model for embeddings and Groq only for chat generation
+(see chains.py). No API key or network cost for this stage.
 
 Folder setup expected:
     data/raw_pdfs/
-        constitution_of_india.pdf
-        bns_2023.pdf
-        consumer_protection_act_2019.pdf
+        constitution.pdf
+        the bharatiya nyaya sanhita 2023 pdf.pdf
         ...
 
 Output:
     chroma_db_legal_bot_part1/   <- the finished, queryable knowledge base
 
 Usage:
-    pip install pdfplumber langchain langchain-openai langchain-chroma python-dotenv
-    # add OPENAI_API_KEY to a .env file in this folder
     python build_knowledge_base.py
 """
 
@@ -31,32 +33,55 @@ import glob
 import logging
 
 import pdfplumber
-from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-
-load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
+# Quiet the very chatty HTTP logs from huggingface_hub during model download
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
 # ---- Config ----
 RAW_PDF_DIR = "data/raw_pdfs"
 PERSIST_DIRECTORY = "chroma_db_legal_bot_part1"
+
+# Must match the model used in vector_store.py — see the note there.
+EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+
+# CRITICAL: some government PDFs (e.g. the BNS) use font spacing that makes
+# pdfplumber's default word detection glue every word together
+# ("Everypersonshallbeliable..."). x_tolerance=1 forces tighter word-boundary
+# detection and restores proper spacing. Harmless on PDFs that already
+# extract correctly, so it is applied to every file.
+X_TOLERANCE = 1
 
 MAX_CHUNK_CHARS = 1500
 FALLBACK_CHUNK_SIZE = 1000
 FALLBACK_CHUNK_OVERLAP = 150
 
 PAGE_NUMBER_RE = re.compile(r"^\s*\d{1,4}\s*$")
+
+# Header/footer junk. Note these appear both spaced and unspaced depending on
+# the source PDF, so patterns are written to tolerate missing spaces.
 HEADER_FOOTER_PATTERNS = [
-    re.compile(r"^\s*THE GAZETTE OF INDIA\s*$", re.IGNORECASE),
-    re.compile(r"^\s*\[PART\s+[IVXLC]+.*\]\s*$", re.IGNORECASE),
+    re.compile(r"^\s*THE\s*GAZETTE\s*OF\s*INDIA.*$", re.IGNORECASE),
+    re.compile(r"^\s*\d*\s*THE\s*GAZETTE\s*OF\s*INDIA.*$", re.IGNORECASE),
+    re.compile(r"^\s*\[\s*Part\s*[IVXLC]+.*$", re.IGNORECASE),
     re.compile(r"^\s*EXTRAORDINARY\s*$", re.IGNORECASE),
+    re.compile(r"^\s*_{10,}\s*$"),            # the long underscore rules
+    re.compile(r"^\s*Sec\.\s*\d+\s*\]", re.IGNORECASE),
 ]
+
+# Indian bare acts number sections bare: "9.(1) Where...", "34. Power of...".
+# The optional Section/Article prefix covers acts that do spell it out.
+# Deliberately does NOT match:
+#   "(29) reason to believe"  -> starts with a paren
+#   "40 of 2019."             -> no period straight after the number
 SECTION_MARKER_RE = re.compile(
-    r"^(Section|Article)\s+(\d+[A-Za-z]?)\.?\s*[-\u2013\u2014]?\s*(.*)$",
+    r"^(?:Section\s+|Article\s+)?(\d{1,3}[A-Z]{0,2})\.\s*",
     re.MULTILINE,
 )
 
@@ -66,11 +91,15 @@ SECTION_MARKER_RE = re.compile(
 # ============================================================
 
 def extract_pdf_text(pdf_path: str) -> str:
-    """Extracts text page-by-page from a PDF using pdfplumber."""
+    """
+    Extracts text page-by-page from a PDF using pdfplumber, with an
+    explicit x_tolerance so word boundaries survive fonts that would
+    otherwise produce run-together text.
+    """
     pages_text = []
     with pdfplumber.open(pdf_path) as pdf:
         for i, page in enumerate(pdf.pages):
-            text = page.extract_text()
+            text = page.extract_text(x_tolerance=X_TOLERANCE)
             if text:
                 pages_text.append(text)
             else:
@@ -79,6 +108,27 @@ def extract_pdf_text(pdf_path: str) -> str:
                     i + 1, os.path.basename(pdf_path)
                 )
     return "\n".join(pages_text)
+
+
+def spacing_health_check(text: str, act_name: str) -> None:
+    """
+    Warns if extracted text still looks word-glued. Catches the failure
+    mode where a PDF needs different extraction settings than the rest,
+    instead of letting it silently poison the vector store.
+
+    Heuristic: normal English prose averages ~5-6 chars per word. If the
+    average 'word' is much longer, spaces are probably missing.
+    """
+    words = text.split()
+    if not words:
+        return
+    avg_len = sum(len(w) for w in words) / len(words)
+    if avg_len > 12:
+        logger.warning(
+            "%s: average word length is %.1f chars — text may still be missing "
+            "spaces. Try a different X_TOLERANCE or a different PDF source.",
+            act_name, avg_len,
+        )
 
 
 # ============================================================
@@ -96,7 +146,6 @@ def is_junk_line(line: str) -> bool:
 
 def rejoin_broken_lines(lines: list[str]) -> str:
     """Rejoins PDF line-wraps into full sentences, preserving section breaks."""
-    section_start_re = re.compile(r"^\s*(Section|SECTION|Article|ARTICLE)\s+\d+")
     joined = []
     buffer = ""
 
@@ -108,7 +157,7 @@ def rejoin_broken_lines(lines: list[str]) -> str:
             buffer = stripped
             continue
 
-        starts_new_section = bool(section_start_re.match(stripped))
+        starts_new_section = bool(SECTION_MARKER_RE.match(stripped))
         buffer_ends_sentence = buffer.rstrip().endswith((".", ";", ":", ")"))
 
         if starts_new_section or buffer_ends_sentence:
@@ -133,7 +182,7 @@ def clean_text(raw_text: str) -> str:
 
 
 # ============================================================
-# Stage 3: Chunking (split on Section/Article boundaries)
+# Stage 3: Chunking (split on section-number boundaries)
 # ============================================================
 
 def fallback_split(text: str) -> list[str]:
@@ -154,18 +203,28 @@ def fallback_split(text: str) -> list[str]:
     if buffer:
         chunks.append(buffer)
 
+    # If paragraph splitting didn't help (one huge paragraph), hard-split it
+    final = []
+    for chunk in chunks:
+        if len(chunk) <= MAX_CHUNK_CHARS:
+            final.append(chunk)
+        else:
+            for i in range(0, len(chunk), FALLBACK_CHUNK_SIZE):
+                final.append(chunk[i:i + FALLBACK_CHUNK_SIZE + FALLBACK_CHUNK_OVERLAP])
+
     overlapped = []
-    for i, chunk in enumerate(chunks):
+    for i, chunk in enumerate(final):
         if i == 0:
             overlapped.append(chunk)
         else:
-            prev_tail = chunks[i - 1][-FALLBACK_CHUNK_OVERLAP:]
+            prev_tail = final[i - 1][-FALLBACK_CHUNK_OVERLAP:]
             overlapped.append(prev_tail + " " + chunk)
+
     return overlapped
 
 
 def split_on_sections(text: str, act_name: str) -> list[dict]:
-    """Splits text at each Section/Article marker into whole-section chunks."""
+    """Splits text at each section-number marker into whole-section chunks."""
     matches = list(SECTION_MARKER_RE.finditer(text))
     if not matches:
         return []
@@ -178,7 +237,7 @@ def split_on_sections(text: str, act_name: str) -> list[dict]:
         if not section_text:
             continue
 
-        section_label = f"{match.group(1)} {match.group(2)}"
+        section_label = f"Section {match.group(1)}"
 
         if len(section_text) > MAX_CHUNK_CHARS:
             for j, sub in enumerate(fallback_split(section_text)):
@@ -201,7 +260,8 @@ def chunk_act(text: str, act_name: str) -> list[dict]:
         return chunks
 
     logger.warning(
-        "%s: no 'Section N' / 'Article N' markers found — using fallback splitter.",
+        "%s: no section-number markers found — using fallback splitter. "
+        "Check this act's formatting; retrieval quality will be worse.",
         act_name,
     )
     return [
@@ -211,7 +271,7 @@ def chunk_act(text: str, act_name: str) -> list[dict]:
 
 
 # ============================================================
-# Stages 4 + 5: Embedding + storing in Chroma
+# Stages 4 + 5: Embedding (local model) + storing in Chroma
 # ============================================================
 
 def embed_and_store(documents: list[Document], persist_directory: str) -> None:
@@ -219,11 +279,16 @@ def embed_and_store(documents: list[Document], persist_directory: str) -> None:
         logger.error("No documents to embed — nothing to store.")
         return
 
-    embeddings = OpenAIEmbeddings()
+    logger.info(
+        "Loading local embedding model '%s' (first run downloads ~80MB, "
+        "cached afterward — no API key needed).",
+        EMBEDDING_MODEL_NAME,
+    )
+    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
 
     logger.info(
-        "Embedding %d chunks and writing to '%s' — this calls the OpenAI "
-        "embeddings API and will incur API cost proportional to chunk count.",
+        "Embedding %d chunks and writing to '%s'. This runs on your CPU — "
+        "no API cost, but may take a few minutes for a large corpus.",
         len(documents), persist_directory,
     )
 
@@ -240,10 +305,17 @@ def embed_and_store(documents: list[Document], persist_directory: str) -> None:
 
 
 # ============================================================
-# Pipeline runner: PDF -> raw -> cleaned -> chunked -> embedded -> stored
+# Pipeline runner
 # ============================================================
 
 def main():
+    if os.path.isdir(PERSIST_DIRECTORY):
+        logger.warning(
+            "'%s' already exists. Chroma will APPEND to it, which mixes old and "
+            "new chunks. Delete the folder first for a clean rebuild.",
+            PERSIST_DIRECTORY,
+        )
+
     pdf_files = glob.glob(os.path.join(RAW_PDF_DIR, "*.pdf"))
 
     if not pdf_files:
@@ -263,6 +335,7 @@ def main():
         # Stage 1
         raw_text = extract_pdf_text(pdf_path)
         logger.info("  Stage 1 (extract): %d chars", len(raw_text))
+        spacing_health_check(raw_text, act_name)
 
         # Stage 2
         cleaned = clean_text(raw_text)
