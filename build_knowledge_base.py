@@ -64,24 +64,40 @@ FALLBACK_CHUNK_OVERLAP = 150
 
 PAGE_NUMBER_RE = re.compile(r"^\s*\d{1,4}\s*$")
 
-# Header/footer junk. Note these appear both spaced and unspaced depending on
-# the source PDF, so patterns are written to tolerate missing spaces.
 HEADER_FOOTER_PATTERNS = [
     re.compile(r"^\s*THE\s*GAZETTE\s*OF\s*INDIA.*$", re.IGNORECASE),
     re.compile(r"^\s*\d*\s*THE\s*GAZETTE\s*OF\s*INDIA.*$", re.IGNORECASE),
     re.compile(r"^\s*\[\s*Part\s*[IVXLC]+.*$", re.IGNORECASE),
     re.compile(r"^\s*EXTRAORDINARY\s*$", re.IGNORECASE),
-    re.compile(r"^\s*_{10,}\s*$"),            # the long underscore rules
+    re.compile(r"^\s*_{10,}\s*$"),
     re.compile(r"^\s*Sec\.\s*\d+\s*\]", re.IGNORECASE),
 ]
 
-# Indian bare acts number sections bare: "9.(1) Where...", "34. Power of...".
-# The optional Section/Article prefix covers acts that do spell it out.
-# Deliberately does NOT match:
-#   "(29) reason to believe"  -> starts with a paren
-#   "40 of 2019."             -> no period straight after the number
+# Act-citation footnote lines, e.g. "45 of 1860." or "2 of 1974." — these
+# are cross-references to OTHER acts by year+number, not section markers,
+# and must never be mistaken for one (see SECTION_MARKER_RE below, which
+# already excludes them structurally, but they're still noise worth
+# stripping from the cleaned text).
+ACT_CITATION_RE = re.compile(r"^\s*\d{1,3}\s+of\s+\d{4}\.\s*$")
+
+# Indian bare acts number sections bare ("9.(1) Where...", "34. Power of...").
+# Real extracted text often glues a short marginal catchword/heading
+# straight onto the section number — e.g. "Snatching. 304. (1) Theft is..."
+# or "Limitation 69. (1) The District Commission..." — because pdfplumber
+# reads the page's marginal-note column inline with the body text. The
+# old version of this regex required the number at the true start of the
+# line, so these prefixed sections were silently swallowed into whatever
+# section came before them (confirmed by inspecting real retrieved
+# chunks: Sections 300, 304, and 305 were merged into a single chunk).
+#
+# This version allows up to 6 short lead-in "words" (the marginal
+# catchword, with or without its own trailing period) before the actual
+# section number, while still rejecting act-citation footnotes like
+# "40 of 2019." (no period directly after the number) and parenthetical
+# sub-clause markers like "(29)" (doesn't start with a letter or digit
+# matching this shape at all).
 SECTION_MARKER_RE = re.compile(
-    r"^(?:Section\s+|Article\s+)?(\d{1,3}[A-Z]{0,2})\.\s*",
+    r"^(?:[A-Za-z][A-Za-z,'\u2019\-]*\.?\s+){0,6}(\d{1,3}[A-Z]{0,2})\.\s*(?=[A-Z(])",
     re.MULTILINE,
 )
 
@@ -115,9 +131,6 @@ def spacing_health_check(text: str, act_name: str) -> None:
     Warns if extracted text still looks word-glued. Catches the failure
     mode where a PDF needs different extraction settings than the rest,
     instead of letting it silently poison the vector store.
-
-    Heuristic: normal English prose averages ~5-6 chars per word. If the
-    average 'word' is much longer, spaces are probably missing.
     """
     words = text.split()
     if not words:
@@ -140,6 +153,8 @@ def is_junk_line(line: str) -> bool:
     if not stripped:
         return True
     if PAGE_NUMBER_RE.match(stripped):
+        return True
+    if ACT_CITATION_RE.match(stripped):
         return True
     return any(p.match(stripped) for p in HEADER_FOOTER_PATTERNS)
 
@@ -203,7 +218,6 @@ def fallback_split(text: str) -> list[str]:
     if buffer:
         chunks.append(buffer)
 
-    # If paragraph splitting didn't help (one huge paragraph), hard-split it
     final = []
     for chunk in chunks:
         if len(chunk) <= MAX_CHUNK_CHARS:
@@ -332,16 +346,13 @@ def main():
         act_name = os.path.splitext(os.path.basename(pdf_path))[0]
         logger.info("Processing: %s", act_name)
 
-        # Stage 1
         raw_text = extract_pdf_text(pdf_path)
         logger.info("  Stage 1 (extract): %d chars", len(raw_text))
         spacing_health_check(raw_text, act_name)
 
-        # Stage 2
         cleaned = clean_text(raw_text)
         logger.info("  Stage 2 (clean):   %d chars -> %d chars", len(raw_text), len(cleaned))
 
-        # Stage 3
         chunks = chunk_act(cleaned, act_name)
         logger.info("  Stage 3 (chunk):   %d chunks", len(chunks))
 
@@ -351,7 +362,6 @@ def main():
 
     logger.info("Total chunks across all acts: %d", len(all_documents))
 
-    # Stages 4 + 5
     embed_and_store(all_documents, PERSIST_DIRECTORY)
 
 
