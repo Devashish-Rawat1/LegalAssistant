@@ -64,13 +64,26 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 # ---- Config ----
-# Groq model. "llama-3.1-8b-instant" is fast and cheap — good for iterating.
-# "llama-3.3-70b-versatile" is stronger but slower/costlier — swap in for
-# final answer quality once the pipeline works end-to-end.
+# Groq model. "llama-3.1-8b-instant" was retired by Groq — using an
+# actively supported model instead. Swap freely; see console.groq.com/docs
+# for the current model list if this one is ever deprecated too.
 LLM_MODEL = "openai/gpt-oss-20b"
 LLM_TEMPERATURE = 0.2          # low temperature: favor grounded, consistent answers over creativity
 RETRIEVAL_K = 4                # how many chunks to retrieve per query
-SCORE_THRESHOLD = 0.5          # minimum similarity score to keep a retrieved chunk
+
+# CHANGED AGAIN: threshold-based retrieval is dropped entirely.
+# Went 0.5 -> 0.3 first, but test_cases.py's precision-category cases
+# proved even 0.3 doesn't work: correct, on-topic matches (e.g. for
+# narrative-phrased consumer complaints) scored as low as 0.06-0.13,
+# while some incorrect matches score higher. There is no single cutoff
+# that separates "relevant" from "irrelevant" for this embedding model
+# on this corpus — a fixed floor was always going to misfire on some
+# category of question. Plain top-k similarity (what --quick mode used
+# all along, and which scored 21/31 pass) doesn't have this failure
+# mode: it always returns the k best matches, and the grounding prompt
+# (see QA_SYSTEM_PROMPT) is responsible for refusing when none of them
+# are actually relevant — which the negative/adversarial test cases
+# already confirmed it does correctly even with irrelevant context.
 
 
 # ============================================================
@@ -94,12 +107,13 @@ QA_SYSTEM_PROMPT = (
     "say so clearly instead of guessing or using outside knowledge.\n"
     "- Where possible, mention which act and section the answer comes "
     "from (this is available in the context).\n"
+    "- Refer to acts ONLY by the name given in the retrieved context's "
+    "metadata. Never substitute a different or older statute name (e.g. "
+    "do not say 'Indian Penal Code' or 'IPC' when the context is from "
+    "the Bharatiya Nyaya Sanhita, 2023, which replaced it — the same "
+    "applies to the CrPC/BNSS and the Evidence Act/BSA).\n"
     "- Explain the answer in plain, accessible language — the user is "
     "not assumed to be a lawyer.\n"
-    "- Refer to acts ONLY by the name given in the retrieved context's "
-    "metadata. Never substitute a different or older statute name (e.g. do "
-    "not say 'Indian Penal Code' when the context is from the Bharatiya "
-    "Nyaya Sanhita, 2023, which replaced it).\n"
     "- This is legal information, not legal advice. Do not tell the "
     "user what they personally should do; explain what the law says.\n\n"
     "Retrieved context:\n{context}"
@@ -119,13 +133,14 @@ def get_retriever(vector_store, llm):
     """
     Wraps the vector store in a history-aware retriever: incoming
     questions are first rewritten into a standalone form using chat
-    history, then used to run similarity search with a score
-    threshold so weakly-relevant chunks are filtered out rather than
-    force-fed to the LLM.
+    history, then used to run plain top-k similarity search. No score
+    threshold — see the note above SCORE_THRESHOLD's removal for why.
+    The grounding prompt (QA_SYSTEM_PROMPT) is what stops the LLM from
+    using irrelevant retrieved chunks, not a retrieval-side cutoff.
     """
     base_retriever = vector_store.as_retriever(
-        search_type="similarity_score_threshold",
-        search_kwargs={"k": RETRIEVAL_K, "score_threshold": SCORE_THRESHOLD},
+        search_type="similarity",
+        search_kwargs={"k": RETRIEVAL_K},
     )
 
     contextualize_prompt = ChatPromptTemplate.from_messages([
@@ -165,8 +180,8 @@ def get_rag_chain(vector_store):
     rag_chain = create_retrieval_chain(retriever, question_answer_chain)
 
     logger.info(
-        "RAG chain ready (model=%s via Groq, k=%d, score_threshold=%.2f)",
-        LLM_MODEL, RETRIEVAL_K, SCORE_THRESHOLD,
+        "RAG chain ready (model=%s via Groq, k=%d, search_type=similarity, no threshold)",
+        LLM_MODEL, RETRIEVAL_K,
     )
 
     return rag_chain
@@ -191,4 +206,4 @@ if __name__ == "__main__":
     for doc in response["context"]:
         source = doc.metadata.get("source", "unknown")
         section = doc.metadata.get("section", "")
-        print(f"  - {source} {section}")
+        print(f"  - {source} {section}")      
