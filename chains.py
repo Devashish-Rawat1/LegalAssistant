@@ -57,6 +57,9 @@ from langchain_groq import ChatGroq
 from langchain_classic.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnableLambda
+
+from retrieval import DEFAULT_MODE, HybridSearcher
 
 load_dotenv()
 
@@ -129,19 +132,19 @@ def get_llm() -> ChatGroq:
     return ChatGroq(model=LLM_MODEL, temperature=LLM_TEMPERATURE)
 
 
-def get_retriever(vector_store, llm):
+def get_retriever(vector_store, llm, mode=None):
     """
-    Wraps the vector store in a history-aware retriever: incoming
-    questions are first rewritten into a standalone form using chat
-    history, then used to run plain top-k similarity search. No score
+    Wraps retrieval in a history-aware retriever: incoming questions are
+    first rewritten into a standalone form using chat history, then run
+    through HybridSearcher (vector + BM25 fused, then cross-encoder
+    reranked; see retrieval.py). `mode` picks "vector", "hybrid" or
+    "hybrid_rerank" (default, or the RETRIEVAL_MODE env var). No score
     threshold — see the note above SCORE_THRESHOLD's removal for why.
     The grounding prompt (QA_SYSTEM_PROMPT) is what stops the LLM from
     using irrelevant retrieved chunks, not a retrieval-side cutoff.
     """
-    base_retriever = vector_store.as_retriever(
-        search_type="similarity",
-        search_kwargs={"k": RETRIEVAL_K},
-    )
+    searcher = HybridSearcher(vector_store, mode) if mode else HybridSearcher(vector_store)
+    base_retriever = RunnableLambda(lambda query: searcher.search(query, k=RETRIEVAL_K))
 
     contextualize_prompt = ChatPromptTemplate.from_messages([
         ("system", CONTEXTUALIZE_SYSTEM_PROMPT),
@@ -156,7 +159,7 @@ def get_retriever(vector_store, llm):
     return history_aware_retriever
 
 
-def get_rag_chain(vector_store):
+def get_rag_chain(vector_store, mode=None):
     """
     Builds the full RAG chain: history-aware retrieval -> stuff
     retrieved chunks into context -> LLM generates a grounded answer.
@@ -168,7 +171,7 @@ def get_rag_chain(vector_store):
         "context" - the list of retrieved Document chunks used
     """
     llm = get_llm()
-    retriever = get_retriever(vector_store, llm)
+    retriever = get_retriever(vector_store, llm, mode)
 
     qa_prompt = ChatPromptTemplate.from_messages([
         ("system", QA_SYSTEM_PROMPT),
@@ -180,8 +183,8 @@ def get_rag_chain(vector_store):
     rag_chain = create_retrieval_chain(retriever, question_answer_chain)
 
     logger.info(
-        "RAG chain ready (model=%s via Groq, k=%d, search_type=similarity, no threshold)",
-        LLM_MODEL, RETRIEVAL_K,
+        "RAG chain ready (model=%s via Groq, k=%d, retrieval=%s, no threshold)",
+        LLM_MODEL, RETRIEVAL_K, mode or DEFAULT_MODE,
     )
 
     return rag_chain
