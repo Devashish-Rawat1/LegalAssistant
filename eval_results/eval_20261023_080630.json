@@ -1,0 +1,450 @@
+{
+  "timestamp": "2026-10-23T08:06:30.504711",
+  "args": {
+    "retrieval_only": true,
+    "judge": false,
+    "ctx_eval": true,
+    "category": "coverage",
+    "k": 4,
+    "out": null,
+    "compare": null
+  },
+  "overall": {
+    "n": 9,
+    "errors": 0,
+    "act_hit": 1.0,
+    "section_hit": 0.8888888888888888,
+    "mrr": 0.5555555555555556,
+    "precision": 0.8333333333333334,
+    "dup_rate": 0.027777777777777776,
+    "refusal_acc": null,
+    "fact_pass": null,
+    "legacy_rate": null,
+    "gen_pass": null,
+    "faithful": null,
+    "relevant": null,
+    "avg_latency": 0.016666666666666663,
+    "ctx_relevance": 0.4444444444444444,
+    "ctx_ap": 0.7561728395061729,
+    "ctx_recall": 0.2,
+    "recall@1": 0.2777777777777778,
+    "chunk_prec@1": 0.3333333333333333,
+    "recall@3": 0.5555555555555556,
+    "chunk_prec@3": 0.2962962962962963,
+    "recall@5": 0.8333333333333334,
+    "chunk_prec@5": 0.26666666666666666,
+    "recall@10": 0.8888888888888888,
+    "chunk_prec@10": 0.16666666666666666
+  },
+  "results": [
+    {
+      "id": "cov-theft",
+      "cat": "coverage",
+      "q": "What is the punishment for theft?",
+      "latency_s": 0.04,
+      "retrieval": {
+        "act_hit": true,
+        "section_hit": false,
+        "mrr": 0.0,
+        "precision": 0.75,
+        "dup_rate": 0.0,
+        "retrieved": [
+          "the bharatiya nyaya sanhita 2023 pdf §305",
+          "The Information Technology Act, 2000 §66B",
+          "the bharatiya nyaya sanhita 2023 pdf §307",
+          "the bharatiya nyaya sanhita 2023 pdf §306"
+        ]
+      },
+      "ranking": {
+        "recall": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.2,
+          "10": 0.1
+        }
+      },
+      "ctx": {
+        "relevance": 0.75,
+        "ap": 0.8055555555555555,
+        "relevant_flags": [
+          true,
+          false,
+          true,
+          true
+        ],
+        "recall": 0.0,
+        "supported_flags": [
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "id": "cov-murder",
+      "cat": "coverage",
+      "q": "What is the punishment for murder?",
+      "latency_s": 0.02,
+      "retrieval": {
+        "act_hit": true,
+        "section_hit": true,
+        "mrr": 1.0,
+        "precision": 1.0,
+        "dup_rate": 0.0,
+        "retrieved": [
+          "the bharatiya nyaya sanhita 2023 pdf §103",
+          "the bharatiya nyaya sanhita 2023 pdf §104",
+          "the bharatiya nyaya sanhita 2023 pdf §105",
+          "the bharatiya nyaya sanhita 2023 pdf §110"
+        ]
+      },
+      "ranking": {
+        "recall": {
+          "1": 0.5,
+          "3": 0.5,
+          "5": 0.5,
+          "10": 0.5
+        },
+        "precision": {
+          "1": 1.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.1
+        }
+      },
+      "ctx": {
+        "relevance": 0.5,
+        "ap": 1.0,
+        "relevant_flags": [
+          true,
+          true,
+          false,
+          false
+        ],
+        "recall": 1.0,
+        "supported_flags": [
+          true
+        ]
+      }
+    },
+    {
+      "id": "cov-fundamental-rights",
+      "cat": "coverage",
+      "q": "What are the fundamental rights guaranteed by the Constitution?",
+      "latency_s": 0.01,
+      "retrieval": {
+        "act_hit": true,
+        "section_hit": true,
+        "mrr": 0.5,
+        "precision": 1.0,
+        "dup_rate": 0.0,
+        "retrieved": [
+          "constitution §13",
+          "constitution §32",
+          "constitution §12",
+          "constitution §7"
+        ]
+      },
+      "ranking": {
+        "recall": {
+          "1": 0.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision": {
+          "1": 0.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.3
+        }
+      },
+      "ctx": {
+        "relevance": 0.25,
+        "ap": 0.5,
+        "relevant_flags": [
+          false,
+          true,
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "id": "cov-consumer-complaint",
+      "cat": "coverage",
+      "q": "How do I file a consumer complaint?",
+      "latency_s": 0.01,
+      "retrieval": {
+        "act_hit": true,
+        "section_hit": true,
+        "mrr": 0.5,
+        "precision": 0.75,
+        "dup_rate": 0.0,
+        "retrieved": [
+          "The Consumer Protection Act, 2019 §81",
+          "The Consumer Protection Act, 2019 §35",
+          "The Consumer Protection Act, 2019 §17",
+          "The Sexual Harassment of Women at Workplace Act, 2013 §11"
+        ]
+      },
+      "ranking": {
+        "recall": {
+          "1": 0.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision": {
+          "1": 0.0,
+          "3": 0.3333333333333333,
+          "5": 0.4,
+          "10": 0.2
+        }
+      },
+      "ctx": {
+        "relevance": 0.5,
+        "ap": 0.5833333333333333,
+        "relevant_flags": [
+          false,
+          true,
+          true,
+          false
+        ]
+      }
+    },
+    {
+      "id": "cov-drunk-driving",
+      "cat": "coverage",
+      "q": "What is the penalty for driving under the influence of alcohol?",
+      "latency_s": 0.02,
+      "retrieval": {
+        "act_hit": true,
+        "section_hit": true,
+        "mrr": 1.0,
+        "precision": 0.75,
+        "dup_rate": 0.0,
+        "retrieved": [
+          "The Motor Vehicles Act, 1988 §185",
+          "the bharatiya nyaya sanhita 2023 pdf §355",
+          "The Motor Vehicles Act, 1988 §185",
+          "The Motor Vehicles Act, 1988 §186"
+        ]
+      },
+      "ranking": {
+        "recall": {
+          "1": 1.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision": {
+          "1": 1.0,
+          "3": 0.6666666666666666,
+          "5": 0.4,
+          "10": 0.2
+        }
+      },
+      "ctx": {
+        "relevance": 0.25,
+        "ap": 1.0,
+        "relevant_flags": [
+          true,
+          false,
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "id": "cov-workplace-icc",
+      "cat": "coverage",
+      "q": "What is an Internal Complaints Committee and who must set one up?",
+      "latency_s": 0.01,
+      "retrieval": {
+        "act_hit": true,
+        "section_hit": true,
+        "mrr": 1.0,
+        "precision": 0.75,
+        "dup_rate": 0.0,
+        "retrieved": [
+          "The Sexual Harassment of Women at Workplace Act, 2013 §4",
+          "The Sexual Harassment of Women at Workplace Act, 2013 §1",
+          "The Sexual Harassment of Women at Workplace Act, 2013 §4",
+          "The Consumer Protection Act, 2019 §47"
+        ]
+      },
+      "ranking": {
+        "recall": {
+          "1": 1.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision": {
+          "1": 1.0,
+          "3": 0.6666666666666666,
+          "5": 0.4,
+          "10": 0.2
+        }
+      },
+      "ctx": {
+        "relevance": 0.75,
+        "ap": 1.0,
+        "relevant_flags": [
+          true,
+          true,
+          true,
+          false
+        ],
+        "recall": 0.0,
+        "supported_flags": [
+          false
+        ]
+      }
+    },
+    {
+      "id": "cov-evidence",
+      "cat": "coverage",
+      "q": "When is electronic evidence admissible in court?",
+      "latency_s": 0.01,
+      "retrieval": {
+        "act_hit": true,
+        "section_hit": true,
+        "mrr": 0.5,
+        "precision": 0.5,
+        "dup_rate": 0.25,
+        "retrieved": [
+          "The Information Technology Act, 2000 §79A",
+          "The Bharatiya Sakshya Adhiniyam, 2023 §63",
+          "The Information Technology Act, 2000 §79A",
+          "The Bharatiya Sakshya Adhiniyam, 2023 §93"
+        ]
+      },
+      "ranking": {
+        "recall": {
+          "1": 0.0,
+          "3": 0.5,
+          "5": 0.5,
+          "10": 0.5
+        },
+        "precision": {
+          "1": 0.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.1
+        }
+      },
+      "ctx": {
+        "relevance": 0.25,
+        "ap": 0.5,
+        "relevant_flags": [
+          false,
+          true,
+          false,
+          false
+        ],
+        "recall": 0.0,
+        "supported_flags": [
+          false
+        ]
+      }
+    },
+    {
+      "id": "cov-arrest",
+      "cat": "coverage",
+      "q": "What is the procedure for arrest without a warrant?",
+      "latency_s": 0.01,
+      "retrieval": {
+        "act_hit": true,
+        "section_hit": true,
+        "mrr": 0.25,
+        "precision": 1.0,
+        "dup_rate": 0.0,
+        "retrieved": [
+          "Bharatiya_Nagarik_Suraksha_Sanhita,_2023 §78",
+          "Bharatiya_Nagarik_Suraksha_Sanhita,_2023 §82",
+          "Bharatiya_Nagarik_Suraksha_Sanhita,_2023 §55",
+          "Bharatiya_Nagarik_Suraksha_Sanhita,_2023 §35"
+        ]
+      },
+      "ranking": {
+        "recall": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.2,
+          "10": 0.1
+        }
+      },
+      "ctx": {
+        "relevance": 0.5,
+        "ap": 0.41666666666666663,
+        "relevant_flags": [
+          false,
+          false,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "id": "cov-hacking",
+      "cat": "coverage",
+      "q": "What is the penalty for hacking a computer system?",
+      "latency_s": 0.02,
+      "retrieval": {
+        "act_hit": true,
+        "section_hit": true,
+        "mrr": 0.25,
+        "precision": 1.0,
+        "dup_rate": 0.0,
+        "retrieved": [
+          "The Information Technology Act, 2000 §65",
+          "The Information Technology Act, 2000 §66B",
+          "The Information Technology Act, 2000 §66D",
+          "The Information Technology Act, 2000 §43"
+        ]
+      },
+      "ranking": {
+        "recall": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.5,
+          "10": 1.0
+        },
+        "precision": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.2,
+          "10": 0.2
+        }
+      },
+      "ctx": {
+        "relevance": 0.25,
+        "ap": 1.0,
+        "relevant_flags": [
+          true,
+          false,
+          false,
+          false
+        ],
+        "recall": 0.0,
+        "supported_flags": [
+          false,
+          false
+        ]
+      }
+    }
+  ]
+}
